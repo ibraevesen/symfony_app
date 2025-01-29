@@ -11,7 +11,9 @@
             <tr>
                 <th>Id</th>
                 <th>Brand</th>
-                <th>actions</th>
+                <th>Model</th>
+                <th>Description</th>
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -19,8 +21,21 @@
                 <tr>
                     <td>{{ car.id }}</td>
                     <td>{{ car.brand }}</td>
+                    <td>
+                        {% for model in car.carModels %}
+                            <p>{{ model.model }}</p>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for model in car.carModels %}
+                            <p>{{ model.description }}</p>
+                        {% endfor %}
+                    </td>
                     <td class="d-flex gap-2">
-                        <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editCarModal" data-id="{{ car.id }}" data-brand="{{ car.Brand }}">Edit</button>
+                        <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editCarModal" data-id="{{ car.id }}" data-brand="{{ car.brand }}"
+                        data-model="{% for model in car.carModels %}{{ model.model }}{% endfor %}" data-description="{% for model in car.carModels %}{{ model.description }}{% endfor %}">
+                            Edit
+                        </button>
                         <form method="post" action="{{ path('app_cars_delete', {'id': car.id}) }}" onsubmit="return confirm('Are you sure you want to delete this item?');">
                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ car.id) }}">
                             <button class="btn btn-danger">Delete</button>
@@ -29,7 +44,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="3">no records found</td>
+                    <td colspan="5">no records found</td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -42,6 +57,7 @@
         </div>
     </div>
 
+    <!-- Edit Car Modal -->
     <div class="modal fade" id="editCarModal">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -56,7 +72,15 @@
                             <label for="carBrand" class="form-label">Brand:</label>
                             <input type="text" id="carBrand" name="brand" class="form-control">
                         </div>
-                        <button type="submit" class="btn btn-primary">Save settings</button>
+                        <div class="mb-3">
+                            <label for="carModel" class="form-label">Model:</label>
+                            <input type="text" id="carModel" name="model" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="carDescription" class="form-label">Description:</label>
+                            <input type="text" id="carDescription" name="description" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -66,6 +90,7 @@
         </div>
     </div>
 
+    <!-- Add Car Modal -->
     <div class="modal fade" id="addCarModal">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -79,6 +104,14 @@
                             <label for="newCarBrand" class="form-label">Brand:</label>
                             <input type="text" id="newCarBrand" name="brand" class="form-control" required>
                         </div>
+                        <div class="mb-3">
+                            <label for="newCarModel" class="form-label">Model:</label>
+                            <input type="text" id="newCarModel" name="model" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newCarDescription" class="form-label">Description:</label>
+                            <input type="text" id="newCarDescription" name="description" class="form-control" required>
+                        </div>
                         <button type="submit" class="btn btn-primary">Add Car</button>
                     </form>
                 </div>
@@ -89,68 +122,41 @@
         </div>
     </div>
 
-
     <script>
+        // Handle Edit Car Modal
         const editCarModal = document.getElementById('editCarModal');
         editCarModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget; // Кнопка, вызвавшая модальное окно
-            const brand = button.getAttribute('data-brand');
+            const button = event.relatedTarget; // The button that triggered the modal
             const carId = button.getAttribute('data-id');
+            const brand = button.getAttribute('data-brand');
+            const model = button.getAttribute('data-model');
+            const description = button.getAttribute('data-description');
 
-            // Заполняем поля формы
-            document.getElementById('carBrand').value = brand;
+            // Fill the form fields
             document.getElementById('carId').value = carId;
+            document.getElementById('carBrand').value = brand;
+            document.getElementById('carModel').value = model;
+            document.getElementById('carDescription').value = description;
         });
 
-        // Обработчик отправки формы
-
-        document.getElementById('editCarForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const carId = document.getElementById('carId').value; // ID автомобиля (можно добавить скрытое поле в форму)
-            const brand = document.getElementById('carBrand').value;
-
-            fetch('/car/update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    id: carId,
-                    brand: brand,
-                }),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.status === 'success') {
-                        location.reload(); // Перезагрузка страницы
-                    } else {
-                        alert('Error updating car: ' + data.message);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
-
+        // Handle Add Car Modal form submission
         document.getElementById('addCarForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
             const brand = document.getElementById('newCarBrand').value;
+            const model = document.getElementById('newCarModel').value;
+            const description = document.getElementById('newCarDescription').value;
 
             fetch('/car/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ brand: brand }),
+                body: JSON.stringify({ brand: brand, model: model, description: description }),
             })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        throw new Error('Error adding car');
                     }
                     return response.json();
                 })
@@ -158,11 +164,37 @@
                     if (data.status === 'success') {
                         location.reload();
                     } else {
-                        alert('Error adding car: ' + data.message);
+                        alert('Error: ' + data.message);
                     }
                 })
                 .catch(error => console.error('Error:', error));
         });
 
+        // Handle Edit Car form submission
+        document.getElementById('editCarForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const carId = document.getElementById('carId').value;
+            const brand = document.getElementById('carBrand').value;
+            const model = document.getElementById('carModel').value;
+            const description = document.getElementById('carDescription').value;
+
+            fetch('/car/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: carId, brand: brand, model: model, description: description }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert('Error updating car: ' + data.message);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
     </script>
 {% endblock %}

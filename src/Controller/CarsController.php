@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\CarModels;
 use App\Entity\Cars;
 use App\Repository\CarsRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,12 +28,17 @@ final class CarsController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (empty($data['brand']) ) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Brand are required'], 400);
+        if (empty($data['brand']) || empty($data['model']) || empty($data['description'])) {
+            return new JsonResponse(['status' => 'error', 'message' => 'All fields are required'], 400);
         }
 
         $car = new Cars();
         $car->setBrand($data['brand']);
+
+        $carModel = new CarModels();
+        $carModel->setModel($data['model']);
+        $carModel->setDescription($data['description']);
+        $car->addCarModel($carModel);
 
         $entityManager->persist($car);
         $entityManager->flush();
@@ -45,22 +51,25 @@ final class CarsController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        // Проверка, что ID передан
-        if (empty($data['id'])) {
-            return new JsonResponse(['status' => 'error', 'message' => 'Car ID is missing'], 400);
+        if (empty($data['id']) || empty($data['brand']) || empty($data['model']) || empty($data['description'])) {
+            return new JsonResponse(['status' => 'error', 'message' => 'All fields are required'], 400);
         }
 
         $car = $entityManager->getRepository(Cars::class)->find($data['id']);
 
-        // Проверка, что объект найден
         if (!$car) {
             return new JsonResponse(['status' => 'error', 'message' => 'Car not found'], 404);
         }
 
-        // Обновляем данные
+        // Обновление данных
         $car->setBrand($data['brand']);
 
-        // Сохраняем изменения
+        // Обновление модели и описания
+        foreach ($car->getCarModels() as $carModel) {
+            $carModel->setModel($data['model']);
+            $carModel->setDescription($data['description']);
+        }
+
         $entityManager->flush();
 
         return new JsonResponse(['status' => 'success', 'message' => 'Car updated successfully']);
