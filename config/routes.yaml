@@ -3,3 +3,13 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+
+car_update:
+    path: /car/update
+    controller: App\Controller\CarsController::update
+    methods: [POST]
+
+car_add:
+    path: /car/add
+    controller: App\Controller\CarsController::add
+    methods: [POST]
