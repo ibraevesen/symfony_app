@@ -23,27 +23,54 @@ final class CarsController extends AbstractController
         ]);
     }
 
-    #[Route('/car/add', name: 'car_add', methods: ['POST'])]
-    public function add(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    #[Route('/car/addModel', name: 'car_addModel', methods: ['POST'])]
+    public function addModel(Request $request, EntityManagerInterface $entityManager, CarsRepository $carsRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        if (empty($data['brand']) || empty($data['model']) || empty($data['description'])) {
+        if (empty($data['brand_id']) || empty($data['model']) || empty($data['description'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'All fields are required'], 400);
         }
 
-        $car = new Cars();
-        $car->setBrand($data['brand']);
+        // Получаем бренд из базы
+        $car = $carsRepository->find($data['brand_id']);
+        if (!$car) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Brand not found'], 404);
+        }
 
+        // Создаем новую модель
         $carModel = new CarModels();
+        $carModel->setCar($car);
         $carModel->setModel($data['model']);
         $carModel->setDescription($data['description']);
-        $car->addCarModel($carModel);
 
-        $entityManager->persist($car);
+        $entityManager->persist($carModel);
         $entityManager->flush();
 
-        return new JsonResponse(['status' => 'success', 'message' => 'Car added successfully']);
+        return new JsonResponse(['status' => 'success', 'message' => 'Model added successfully']);
+    }
+
+    #[Route('/car/addBrand', name: 'car_addBrand', methods: ['POST'])]
+    public function addBrand(Request $request, EntityManagerInterface $entityManager, CarsRepository $carsRepository): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['brand'])) {
+            return new JsonResponse(['status' => 'error', 'message' => 'All fields are required'], 400);
+        }
+
+        $existingBrand = $carsRepository->findOneBy(['brand' => $data['brand']]);
+        if ($existingBrand) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Brand already exists'], 409);
+        }
+
+        $cars = new Cars();
+        $cars->setBrand($data['brand']);
+
+        $entityManager->persist($cars);
+        $entityManager->flush();
+
+        return new JsonResponse(['status' => 'success', 'message' => 'Brand added successfully']);
     }
 
     #[Route('/car/update', name: 'car_update', methods: ['POST'])]
@@ -76,7 +103,7 @@ final class CarsController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_cars_delete', methods: ['POST'])]
-    public function delete(Request $request, Cars $car, EntityManagerInterface $entityManager): Response
+    public function delete(Request $request, CarModels $car, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$car->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($car);

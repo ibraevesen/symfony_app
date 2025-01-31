@@ -18,30 +18,30 @@
             </thead>
             <tbody>
             {% for car in cars %}
-                <tr>
-                    <td>{{ car.id }}</td>
-                    <td>{{ car.brand }}</td>
-                    <td>
-                        {% for model in car.carModels %}
-                            <p>{{ model.model }}</p>
-                        {% endfor %}
-                    </td>
-                    <td>
-                        {% for model in car.carModels %}
-                            <p>{{ model.description }}</p>
-                        {% endfor %}
-                    </td>
-                    <td class="d-flex gap-2">
-                        <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editCarModal" data-id="{{ car.id }}" data-brand="{{ car.brand }}"
-                        data-model="{% for model in car.carModels %}{{ model.model }}{% endfor %}" data-description="{% for model in car.carModels %}{{ model.description }}{% endfor %}">
-                            Edit
-                        </button>
-                        <form method="post" action="{{ path('app_cars_delete', {'id': car.id}) }}" onsubmit="return confirm('Are you sure you want to delete this item?');">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ car.id) }}">
-                            <button class="btn btn-danger">Delete</button>
-                        </form>
-                    </td>
-                </tr>
+                {% for model in car.carModels %}
+                    <tr>
+                        <td>{{ car.id }}</td>
+                        <td>{{ car.brand }}</td>
+                        <td>{{ model.model }}</td>
+                        <td>{{ model.description }}</td>
+                        <td class="d-flex gap-2">
+                            <!-- Edit button for the model -->
+                            <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editCarModal"
+                                    data-id="{{ car.id }}"
+                                    data-brand="{{ car.brand }}"
+                                    data-model="{{ model.model }}"
+                                    data-description="{{ model.description }}">
+                                Edit
+                            </button>
+
+                            <!-- Delete button for the model -->
+                            <form method="post" action="{{ path('app_cars_delete', {'id': model.id}) }}" onsubmit="return confirm('Are you sure you want to delete this model?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ model.id) }}">
+                                <button class="btn btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
             {% else %}
                 <tr>
                     <td colspan="5">no records found</td>
@@ -51,8 +51,11 @@
         </table>
 
         <div class="text-end">
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCarModal">
-                Add New Car
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModelModal">
+                Add New Model
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBrandModal">
+                Add New Brand
             </button>
         </div>
     </div>
@@ -67,10 +70,14 @@
                 </div>
                 <div class="modal-body">
                     <form id="editCarForm">
-                        <input type="hidden" id="carId" name="id">
                         <div class="mb-3">
-                            <label for="carBrand" class="form-label">Brand:</label>
-                            <input type="text" id="carBrand" name="brand" class="form-control">
+                            <label for="editModelBrand" class="form-label">Brand:</label>
+                            <select id="editModelBrand" name="editBrand" class="form-control" required>
+                                <option value="">Select brand</option>
+                                {% for car in cars %}
+                                    <option value="{{ car.id }}">{{ car.brand }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label for="carModel" class="form-label">Model:</label>
@@ -90,27 +97,55 @@
         </div>
     </div>
 
-    <!-- Add Car Modal -->
-    <div class="modal fade" id="addCarModal">
+    <div class="modal fade" id="addBrandModal">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add New Car</h5>
+                    <h5 class="modal-title">Add New Brand</h5>
                     <button class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="addCarForm">
+                    <form id="addBrandForm">
                         <div class="mb-3">
-                            <label for="newCarBrand" class="form-label">Brand:</label>
-                            <input type="text" id="newCarBrand" name="brand" class="form-control" required>
+                            <label for="newBrand" class="form-label">Brand:</label>
+                            <input type="text" id="newBrand" name="newBrand" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Brand</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Car Modal -->
+    <div class="modal fade" id="addModelModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Model</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addModelForm">
+                        <div class="mb-3">
+                            <label for="newModelBrand" class="form-label">Brand:</label>
+                            <select id="newModelBrand" name="brand" class="form-control" required>
+                                <option value="">Select a brand</option>
+                                {% for car in cars %}
+                                    <option value="{{ car.id }}">{{ car.brand }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="mb-3">
-                            <label for="newCarModel" class="form-label">Model:</label>
-                            <input type="text" id="newCarModel" name="model" class="form-control" required>
+                            <label for="newModel" class="form-label">Model:</label>
+                            <input type="text" id="newModel" name="model" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label for="newCarDescription" class="form-label">Description:</label>
-                            <input type="text" id="newCarDescription" name="description" class="form-control" required>
+                            <label for="newModelDescription" class="form-label">Description:</label>
+                            <input type="text" id="newModelDescription" name="description" class="form-control" required>
                         </div>
                         <button type="submit" class="btn btn-primary">Add Car</button>
                     </form>
@@ -139,27 +174,52 @@
             document.getElementById('carDescription').value = description;
         });
 
-        // Handle Add Car Modal form submission
-        document.getElementById('addCarForm').addEventListener('submit', function (e) {
+        document.getElementById('addBrandForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
-            const brand = document.getElementById('newCarBrand').value;
-            const model = document.getElementById('newCarModel').value;
-            const description = document.getElementById('newCarDescription').value;
+            const brand = document.getElementById('newBrand').value;
 
-            fetch('/car/add', {
+            fetch('/car/addBrand', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ brand: brand, model: model, description: description }),
+                body: JSON.stringify({
+                    brand: brand
+                }),
             })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error adding car');
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
                     }
-                    return response.json();
                 })
+                .catch(error => console.error('Error:', error));
+        });
+
+        // Handle Add Car Modal form submission
+        document.getElementById('addModelForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const brandId = document.getElementById('newModelBrand').value;
+            const model = document.getElementById('newModel').value;
+            const description = document.getElementById('newModelDescription').value;
+
+            fetch('/car/addModel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    brand_id: brandId,
+                    model: model,
+                    description: description
+                }),
+            })
+                .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
                         location.reload();

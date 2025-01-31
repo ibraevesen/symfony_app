@@ -9,7 +9,12 @@ car_update:
     controller: App\Controller\CarsController::update
     methods: [POST]
 
-car_add:
-    path: /car/add
-    controller: App\Controller\CarsController::add
+car_addModel:
+    path: /car/addModel
+    controller: App\Controller\CarsController::addModel
+    methods: [POST]
+
+car_addBrand:
+    path: /car/addBrand
+    controller: App\Controller\CarsController::addBrand
     methods: [POST]
