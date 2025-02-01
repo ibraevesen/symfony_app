@@ -27,7 +27,7 @@
                         <td class="d-flex gap-2">
                             <!-- Edit button for the model -->
                             <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editCarModal"
-                                    data-id="{{ car.id }}"
+                                    data-id="{{ model.id }}"
                                     data-brand="{{ car.brand }}"
                                     data-model="{{ model.model }}"
                                     data-description="{{ model.description }}">
@@ -70,14 +70,10 @@
                 </div>
                 <div class="modal-body">
                     <form id="editCarForm">
+                        <input type="hidden" id="modelId" value="">
                         <div class="mb-3">
-                            <label for="editModelBrand" class="form-label">Brand:</label>
-                            <select id="editModelBrand" name="editBrand" class="form-control" required>
-                                <option value="">Select brand</option>
-                                {% for car in cars %}
-                                    <option value="{{ car.id }}">{{ car.brand }}</option>
-                                {% endfor %}
-                            </select>
+                            <label for="modelBrand" class="form-label">Brand:</label>
+                            <input id="modelBrand" name="editBrand" class="form-control" value="" readonly>
                         </div>
                         <div class="mb-3">
                             <label for="carModel" class="form-label">Model:</label>
@@ -162,14 +158,14 @@
         const editCarModal = document.getElementById('editCarModal');
         editCarModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget; // The button that triggered the modal
-            const carId = button.getAttribute('data-id');
+            const modelId = button.getAttribute('data-id');
             const brand = button.getAttribute('data-brand');
             const model = button.getAttribute('data-model');
             const description = button.getAttribute('data-description');
 
             // Fill the form fields
-            document.getElementById('carId').value = carId;
-            document.getElementById('carBrand').value = brand;
+            document.getElementById('modelId').value = modelId;
+            document.getElementById('modelBrand').value = brand;
             document.getElementById('carModel').value = model;
             document.getElementById('carDescription').value = description;
         });
@@ -234,8 +230,7 @@
         document.getElementById('editCarForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
-            const carId = document.getElementById('carId').value;
-            const brand = document.getElementById('carBrand').value;
+            const modelId = document.getElementById('modelId').value;
             const model = document.getElementById('carModel').value;
             const description = document.getElementById('carDescription').value;
 
@@ -244,12 +239,22 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ id: carId, brand: brand, model: model, description: description }),
+                body: JSON.stringify({ id: modelId, model: model, description: description }),
             })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        location.reload();
+                        // Найти строку и обновить без перезагрузки
+                        const row = document.querySelector(`button[data-id="${modelId}"]`).closest('tr');
+                        row.querySelector('td:nth-child(3)').textContent = model;  // Model
+                        row.querySelector('td:nth-child(4)').textContent = description;  // Description
+
+                        // Обновить data-атрибуты в кнопке "Edit", чтобы при следующем открытии модального окна были новые данные
+                        const editButton = row.querySelector('button[data-bs-toggle="modal"]');
+                        editButton.setAttribute('data-model', model);
+                        editButton.setAttribute('data-description', description);
+
+                        bootstrap.Modal.getInstance(editCarModal).hide();
                     } else {
                         alert('Error updating car: ' + data.message);
                     }

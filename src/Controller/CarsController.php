@@ -78,28 +78,31 @@ final class CarsController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (empty($data['id']) || empty($data['brand']) || empty($data['model']) || empty($data['description'])) {
+        if (empty($data['id']) || empty($data['model']) || empty($data['description'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'All fields are required'], 400);
         }
 
-        $car = $entityManager->getRepository(Cars::class)->find($data['id']);
+        $carModel = $entityManager->getRepository(CarModels::class)->find($data['id']);
 
-        if (!$car) {
+        if (!$carModel) {
             return new JsonResponse(['status' => 'error', 'message' => 'Car not found'], 404);
         }
 
-        // Обновление данных
-        $car->setBrand($data['brand']);
-
         // Обновление модели и описания
-        foreach ($car->getCarModels() as $carModel) {
-            $carModel->setModel($data['model']);
-            $carModel->setDescription($data['description']);
-        }
+        $carModel->setModel($data['model']);
+        $carModel->setDescription($data['description']);
 
         $entityManager->flush();
 
-        return new JsonResponse(['status' => 'success', 'message' => 'Car updated successfully']);
+        return new JsonResponse([
+            'status' => 'success',
+            'message' => 'Car updated successfully',
+            'updatedData' => [
+                'id' => $carModel->getId(),
+                'model' => $carModel->getModel(),
+                'description' => $carModel->getDescription(),
+            ]
+        ]);
     }
 
     #[Route('/{id}', name: 'app_cars_delete', methods: ['POST'])]
