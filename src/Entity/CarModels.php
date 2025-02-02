@@ -20,6 +20,9 @@ class CarModels
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $photo = null;
+
     #[ORM\ManyToOne(targetEntity: Cars::class, inversedBy: 'carModels')]
     #[ORM\JoinColumn(name: 'car_id', referencedColumnName: 'id')]
     private ?Cars $car = null;
@@ -62,6 +65,17 @@ class CarModels
     {
         $this->car = $car;
 
+        return $this;
+    }
+
+    public function getPhoto(): ?string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(?string $photo): self
+    {
+        $this->photo = $photo;
         return $this;
     }
 }

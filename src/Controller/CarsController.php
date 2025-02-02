@@ -26,7 +26,8 @@ final class CarsController extends AbstractController
     #[Route('/car/addModel', name: 'car_addModel', methods: ['POST'])]
     public function addModel(Request $request, EntityManagerInterface $entityManager, CarsRepository $carsRepository): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
+        $data = $request->request->all();
+        $file = $request->files->get('photo');
 
         if (empty($data['brand_id']) || empty($data['model']) || empty($data['description'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'All fields are required'], 400);
@@ -43,6 +44,13 @@ final class CarsController extends AbstractController
         $carModel->setCar($car);
         $carModel->setModel($data['model']);
         $carModel->setDescription($data['description']);
+
+        if ($file) {
+            $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads';
+            $newFilename = uniqid() . '.' . $file->guessExtension();
+            $file->move($uploadsDir, $newFilename);
+            $carModel->setPhoto('/uploads/' . $newFilename);
+        }
 
         $entityManager->persist($carModel);
         $entityManager->flush();
@@ -76,7 +84,8 @@ final class CarsController extends AbstractController
     #[Route('/car/update', name: 'car_update', methods: ['POST'])]
     public function update(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
+        $data = $request->request->all();
+        $file = $request->files->get('photo');
 
         if (empty($data['id']) || empty($data['model']) || empty($data['description'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'All fields are required'], 400);
@@ -92,6 +101,13 @@ final class CarsController extends AbstractController
         $carModel->setModel($data['model']);
         $carModel->setDescription($data['description']);
 
+        if ($file) {
+            $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads';
+            $newFilename = uniqid() . '.' . $file->guessExtension();
+            $file->move($uploadsDir, $newFilename);
+            $carModel->setPhoto('/uploads/' . $newFilename);
+        }
+
         $entityManager->flush();
 
         return new JsonResponse([
@@ -101,6 +117,7 @@ final class CarsController extends AbstractController
                 'id' => $carModel->getId(),
                 'model' => $carModel->getModel(),
                 'description' => $carModel->getDescription(),
+                'photo' => $carModel->getPhoto(),
             ]
         ]);
     }

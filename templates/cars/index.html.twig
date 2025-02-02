@@ -13,6 +13,7 @@
                 <th>Brand</th>
                 <th>Model</th>
                 <th>Description</th>
+                <th>Photo</th>
                 <th>Actions</th>
             </tr>
             </thead>
@@ -24,6 +25,13 @@
                         <td>{{ car.brand }}</td>
                         <td>{{ model.model }}</td>
                         <td>{{ model.description }}</td>
+                        <td>
+                            {% if model.photo %}
+                                <img src="{{ asset(model.photo) }}" alt="Car Photo" width="100">
+                            {% else %}
+                                No photo
+                            {% endif %}
+                        </td>
                         <td class="d-flex gap-2">
                             <!-- Edit button for the model -->
                             <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editCarModal"
@@ -82,6 +90,10 @@
                         <div class="mb-3">
                             <label for="carDescription" class="form-label">Description:</label>
                             <input type="text" id="carDescription" name="description" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="carPhoto" class="form-label">Photo:</label>
+                            <input type="file" id="carPhoto" name="photo" class="form-control">
                         </div>
                         <button type="submit" class="btn btn-primary">Save changes</button>
                     </form>
@@ -143,6 +155,10 @@
                             <label for="newModelDescription" class="form-label">Description:</label>
                             <input type="text" id="newModelDescription" name="description" class="form-control" required>
                         </div>
+                        <div class="mb-3">
+                            <label for="newModelPhoto" class="form-label">Photo:</label>
+                            <input type="file" id="newModelPhoto" name="photo" class="form-control">
+                        </div>
                         <button type="submit" class="btn btn-primary">Add Car</button>
                     </form>
                 </div>
@@ -196,24 +212,26 @@
                 .catch(error => console.error('Error:', error));
         });
 
-        // Handle Add Car Modal form submission
+        // Handle Add Model Modal form submission
         document.getElementById('addModelForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
             const brandId = document.getElementById('newModelBrand').value;
             const model = document.getElementById('newModel').value;
             const description = document.getElementById('newModelDescription').value;
+            const photo = document.getElementById('newModelPhoto').files[0];
+
+            const formData = new FormData();
+            formData.append('brand_id', brandId);
+            formData.append('model', model);
+            formData.append('description', description);
+            if (photo) {
+                formData.append('photo', photo);
+            }
 
             fetch('/car/addModel', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    brand_id: brandId,
-                    model: model,
-                    description: description
-                }),
+                body: formData,
             })
                 .then(response => response.json())
                 .then(data => {
@@ -233,13 +251,19 @@
             const modelId = document.getElementById('modelId').value;
             const model = document.getElementById('carModel').value;
             const description = document.getElementById('carDescription').value;
+            const photo = document.getElementById('carPhoto').files[0];
+
+            const formData = new FormData();
+            formData.append('id', modelId);
+            formData.append('model', model);
+            formData.append('description', description);
+            if (photo) {
+                formData.append('photo', photo);
+            }
 
             fetch('/car/update', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ id: modelId, model: model, description: description }),
+                body: formData,
             })
                 .then(response => response.json())
                 .then(data => {
@@ -248,6 +272,9 @@
                         const row = document.querySelector(`button[data-id="${modelId}"]`).closest('tr');
                         row.querySelector('td:nth-child(3)').textContent = model;  // Model
                         row.querySelector('td:nth-child(4)').textContent = description;  // Description
+                        if (data.updatedData.photo) {
+                            row.querySelector('td:nth-child(5) img').src = data.updatedData.photo;
+                        }
 
                         // Обновить data-атрибуты в кнопке "Edit", чтобы при следующем открытии модального окна были новые данные
                         const editButton = row.querySelector('button[data-bs-toggle="modal"]');
