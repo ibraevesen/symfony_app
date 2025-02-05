@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Car info{% endblock %}
+
+{% block body %}
+
+    <div class="container mt-4">
+        <h1>Car info</h1>
+
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col">
+                    <div>
+                        <img src="{{ model.photo }}" class="card-img-top car-image" alt="Фото автомобиля">
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ model.car.brand }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">Модель: {{ model.model }}</h6>
+                        <p class="card-text">Описание: {{ model.description }}</p>
+                        <a href="{{ path('app_cars_index') }}" class="btn btn-primary">На главную</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

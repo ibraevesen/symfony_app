@@ -1,19 +1,17 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Cars index{% endblock %}
+{% block title %}Cars{% endblock %}
 
 {% block body %}
     <div class="container mt-4">
-        <h1 class="text-center">Cars index</h1>
+        <h1>Cars</h1>
 
-        <table class="table table-striped table-hover">
+        <div class="col-6">
+        <table class="table">
             <thead>
             <tr>
-                <th>Id</th>
                 <th>Brand</th>
                 <th>Model</th>
-                <th>Description</th>
-                <th>Photo</th>
                 <th>Actions</th>
             </tr>
             </thead>
@@ -21,32 +19,28 @@
             {% for car in cars %}
                 {% for model in car.carModels %}
                     <tr>
-                        <td>{{ car.id }}</td>
                         <td>{{ car.brand }}</td>
                         <td>{{ model.model }}</td>
-                        <td>{{ model.description }}</td>
-                        <td>
-                            {% if model.photo %}
-                                <img src="{{ asset(model.photo) }}" alt="Car Photo" width="100">
-                            {% else %}
-                                No photo
-                            {% endif %}
-                        </td>
-                        <td class="d-flex gap-2">
-                            <!-- Edit button for the model -->
-                            <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editCarModal"
-                                    data-id="{{ model.id }}"
-                                    data-brand="{{ car.brand }}"
-                                    data-model="{{ model.model }}"
-                                    data-description="{{ model.description }}">
-                                Edit
-                            </button>
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <td class="d-flex gap-2">
+                                <!-- Edit button for the model -->
+                                <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editCarModal"
+                                        data-id="{{ model.id }}"
+                                        data-brand="{{ car.brand }}"
+                                        data-model="{{ model.model }}"
+                                        data-description="{{ model.description }}">
+                                    Edit
+                                </button>
 
-                            <!-- Delete button for the model -->
-                            <form method="post" action="{{ path('app_cars_delete', {'id': model.id}) }}" onsubmit="return confirm('Are you sure you want to delete this model?');">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ model.id) }}">
-                                <button class="btn btn-danger">Delete</button>
-                            </form>
+                                <!-- Delete button for the model -->
+                                <form method="post" action="{{ path('app_cars_delete', {'id': model.id}) }}" onsubmit="return confirm('Are you sure you want to delete this model?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ model.id) }}">
+                                    <button class="btn btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        {% endif %}
+                        <td>
+                            <a class="btn btn-info" href="{{ path('app_cars_show', {'id': model.id}) }}">info</a>
                         </td>
                     </tr>
                 {% endfor %}
@@ -57,15 +51,18 @@
             {% endfor %}
             </tbody>
         </table>
-
-        <div class="text-end">
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModelModal">
-                Add New Model
-            </button>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBrandModal">
-                Add New Brand
-            </button>
         </div>
+
+        {% if is_granted('ROLE_ADMIN') %}
+            <div class="text-end">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModelModal">
+                    Add New Model
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBrandModal">
+                    Add New Brand
+                </button>
+            </div>
+        {% endif %}
     </div>
 
     <!-- Edit Car Modal -->

@@ -23,6 +23,14 @@ final class CarsController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}', name: 'app_cars_show', methods: ['GET'])]
+    public function show(CarModels $car): Response
+    {
+        return $this->render('cars/info.html.twig', [
+            'model' => $car,
+        ]);
+    }
+
     #[Route('/car/addModel', name: 'car_addModel', methods: ['POST'])]
     public function addModel(Request $request, EntityManagerInterface $entityManager, CarsRepository $carsRepository): JsonResponse
     {

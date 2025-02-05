@@ -4,6 +4,10 @@ controllers:
         namespace: App\Controller
     type: attribute
 
+home:
+    path: /
+    controller: App\Controller\CarsController::index
+
 car_update:
     path: /car/update
     controller: App\Controller\CarsController::update
