@@ -16,24 +16,36 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ model.car.brand }}</h5>
                         <h6 class="card-subtitle mb-2 text-muted">Модель: {{ model.model }}</h6>
+                        <p class="card-text">Цена: {{ model.modelPrice }} USD</p>
                         <p class="card-text">Описание: {{ model.description }}</p>
                         <div class="d-flex gap-2">
                             <a href="{{ path('app_cars_index') }}" class="btn btn-primary">На главную</a>
+                            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                <div id="paypal-button-container"></div>
+                                <p id="result-message"></p>
+                            {% else %}
+                                <p>Для покупки необходимо войти в систему.</p>
+                            {% endif %}
                             {% if is_granted('ROLE_ADMIN') %}
-                                    <!-- Edit button for the model -->
-                                    <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editCarModal"
-                                            data-id="{{ model.id }}"
-                                            data-brand="{{ model.car.brand }}"
-                                            data-model="{{ model.model }}"
-                                            data-description="{{ model.description }}">
-                                        Edit
-                                    </button>
+                                <!-- Кнопка для открытия модального окна с историей покупок -->
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#buyHistoryModal">
+                                    История покупок
+                                </button>
 
-                                    <!-- Delete button for the model -->
-                                    <form method="post" action="{{ path('app_cars_delete', {'id': model.id}) }}" onsubmit="return confirm('Are you sure you want to delete this model?');">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ model.id) }}">
-                                        <button class="btn btn-danger">Delete</button>
-                                    </form>
+                                <!-- Edit button for the model -->
+                                <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#editCarModal"
+                                        data-id="{{ model.id }}"
+                                        data-brand="{{ model.car.brand }}"
+                                        data-model="{{ model.model }}"
+                                        data-description="{{ model.description }}">
+                                    Edit
+                                </button>
+
+                                <!-- Delete button for the model -->
+                                <form method="post" action="{{ path('app_cars_delete', {'id': model.id}) }}" onsubmit="return confirm('Are you sure you want to delete this model?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ model.id) }}">
+                                    <button class="btn btn-danger">Delete</button>
+                                </form>
                             {% endif %}
                         </div>
                     </div>
@@ -79,75 +91,109 @@
         </div>
     </div>
 
+    <div class="modal fade" id="buyHistoryModal" tabindex="-1" aria-labelledby="buyHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="buyHistoryModalLabel">
+                        История покупок для модели {{ model.model }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    {% if model.buyHistories|length > 0 %}
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Сумма</th>
+                                <th>Paypal Transaction ID</th>
+                                <th>Дата и время оплаты</th>
+                                <th>ID модели автомобиля</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for history in carModel.buyHistories %}
+                                <tr>
+                                    <td>{{ history.id }}</td>
+                                    <td>{{ history.amountPaid }}</td>
+                                    <td>{{ history.paypalTransactionId }}</td>
+                                    <td>{{ history.datetimePaid|date('d-m-Y H:i:s') }}</td>
+                                    <td>{{ history.modelId }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>Нет истории покупок для этой модели.</p>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ asset('js/custom.js') }}"></script>
+    <script
+            src="https://www.paypal.com/sdk/js?client-id=AY5Rdu8kbJHWHk8efPzpgbMjb8hUiGO0iE3CeokVGoXSaqfLJt4e2b4zXzzOezMjvny0N9IX2bOOQGcL&buyer-country=US&currency=USD&components=buttons&disable-funding=venmo,paylater,card"
+            data-sdk-integration-source="developer-studio"
+    ></script>
     <script>
-        document.addEventListener('turbo:load', function () {
-            // Handle Edit Car Modal
-            const editCarModal = document.getElementById('editCarModal');
-            editCarModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget; // The button that triggered the modal
-                const modelId = button.getAttribute('data-id');
-                const brand = button.getAttribute('data-brand');
-                const model = button.getAttribute('data-model');
-                const description = button.getAttribute('data-description');
-
-                // Fill the form fields
-                document.getElementById('modelId').value = modelId;
-                document.getElementById('modelBrand').value = brand;
-                document.getElementById('carModel').value = model;
-                document.getElementById('carDescription').value = description;
-            });
-
-            // Handle Edit Car form submission
-            document.getElementById('editCarForm').addEventListener('submit', function (e) {
-                e.preventDefault();
-
-                const modelId = document.getElementById('modelId').value;
-                const model = document.getElementById('carModel').value;
-                const description = document.getElementById('carDescription').value;
-                const photo = document.getElementById('carPhoto').files[0];
-
-                const formData = new FormData();
-                formData.append('id', modelId);
-                formData.append('model', model);
-                formData.append('description', description);
-                if (photo) {
-                    formData.append('photo', photo);
-                }
-                console.log(formData);
-
-                fetch('/car/update', {
-                    method: 'POST',
-                    body: formData,
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            // Найти карточку и обновить данные
-                            const card = document.querySelector(`button[data-id="${modelId}"]`).closest('.card-body');
-                            card.querySelector('.card-subtitle').textContent = 'Модель: ' + model;  // Обновить описание модели
-                            card.querySelector('.card-text').textContent = 'Описание: ' + description;  // Обновить описание
-
-                            // Обновить фото, если оно было изменено
-                            if (photo && data.updatedData.photo) {
-                                const imgElement = card.querySelector('.car-image');
-                                if (imgElement) {
-                                    imgElement.src = data.updatedData.photo;  // Обновить фото
-                                }
-                            }
-
-                            // Обновить data-атрибуты кнопки "Edit"
-                            const editButton = card.querySelector('button[data-bs-toggle="modal"]');
-                            editButton.setAttribute('data-model', model);
-                            editButton.setAttribute('data-description', description);
-
-                            // Закрыть модальное окно
-                            bootstrap.Modal.getInstance(editCarModal).hide();
-                        } else {
-                            alert('Error updating car: ' + data.message);
-                        }
+        window.paypal.Buttons({
+            style: {
+                shape: "rect",
+                layout: "vertical",
+                color: "gold",
+                label: "paypal",
+            },
+            createOrder: async function(data, actions) {
+                // Отправляем запрос на создание заказа, передавая model_id выбранной модели
+                const response = await fetch("{{ path('create_order') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        model_id: {{ model.id }}
                     })
-                    .catch(error => console.error('Error:', error));
-            });
-        });
+                });
+                const orderData = await response.json();
+                if (orderData.id) {
+                    return orderData.id;
+                }
+                throw new Error("Ошибка при создании заказа");
+            },
+            onApprove: async function(data, actions) {
+                const orderID = data.orderID;
+                // Формируем URL с плейсхолдером, который заменяем на orderID
+                const captureUrl = "{{ path('capture_order', { orderId: 'ORDER_ID_PLACEHOLDER' }) }}"
+                    .replace('ORDER_ID_PLACEHOLDER', orderID);
+
+                const response = await fetch(captureUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        model_id: {{ model.id }}
+                    })
+                });
+                const orderData = await response.json();
+                if (orderData.error) {
+                    resultMessage(`Ошибка транзакции: ${orderData.error}`);
+                } else {
+                    resultMessage(`Транзакция завершена. ID: ${orderData.purchase_units[0].payments.captures[0].id}`);
+                }
+            }
+        }).render('#paypal-button-container');
+
+        function resultMessage(message) {
+            const container = document.querySelector("#result-message");
+            container.innerHTML = message;
+        }
     </script>
 {% endblock %}

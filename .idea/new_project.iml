@@ -134,6 +134,13 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/twig/extra-bundle" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/twig/twig" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/webmozart/assert" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/cweagans/composer-patches" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/apimatic/core" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/apimatic/core-interfaces" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/apimatic/jsonmapper" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/apimatic/unirest-php" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/paypal/paypal-server-sdk" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/php-jsonpointer/php-jsonpointer" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
