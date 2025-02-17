@@ -95,7 +95,7 @@ final class CarsController extends AbstractController
         $data = $request->request->all();
         $file = $request->files->get('photo');
 
-        if (empty($data['id']) || empty($data['model']) || empty($data['description'])) {
+        if (empty($data['id']) || empty($data['model']) || empty($data['description']) || empty($data['price'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'All fields are required'], 400);
         }
 
@@ -107,6 +107,7 @@ final class CarsController extends AbstractController
 
         // Обновление модели и описания
         $carModel->setModel($data['model']);
+        $carModel->setModelPrice($data['price']);
         $carModel->setDescription($data['description']);
 
         if ($file) {
@@ -124,6 +125,7 @@ final class CarsController extends AbstractController
             'updatedData' => [
                 'id' => $carModel->getId(),
                 'model' => $carModel->getModel(),
+                'price' => $carModel->getModelPrice(),
                 'description' => $carModel->getDescription(),
                 'photo' => $carModel->getPhoto(),
             ]

@@ -16,14 +16,14 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ model.car.brand }}</h5>
                         <h6 class="card-subtitle mb-2 text-muted">Модель: {{ model.model }}</h6>
-                        <p class="card-text">Цена: {{ model.modelPrice }} USD</p>
+                        <p class="car-price">Цена: {{ model.modelPrice }} USD</p>
                         <p class="card-text">Описание: {{ model.description }}</p>
                         <div class="d-flex gap-2">
                             <a href="{{ path('app_cars_index') }}" class="btn btn-primary">На главную</a>
-                            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                            {% if is_granted('ROLE_USER') and not is_granted('ROLE_ADMIN') %}
                                 <div id="paypal-button-container"></div>
                                 <p id="result-message"></p>
-                            {% else %}
+                            {% elseif not is_granted('IS_AUTHENTICATED_FULLY') %}
                                 <p>Для покупки необходимо войти в систему.</p>
                             {% endif %}
                             {% if is_granted('ROLE_ADMIN') %}
@@ -37,6 +37,7 @@
                                         data-id="{{ model.id }}"
                                         data-brand="{{ model.car.brand }}"
                                         data-model="{{ model.model }}"
+                                        data-price="{{ model.modelPrice }}"
                                         data-description="{{ model.description }}">
                                     Edit
                                 </button>
@@ -72,6 +73,10 @@
                         <div class="mb-3">
                             <label for="carModel" class="form-label">Model:</label>
                             <input type="text" id="carModel" name="model" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="carPrice" class="form-label">Price:</label>
+                            <input type="number" id="carPrice" name="price" class="form-control">
                         </div>
                         <div class="mb-3">
                             <label for="carDescription" class="form-label">Description:</label>
@@ -113,13 +118,13 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {% for history in carModel.buyHistories %}
+                            {% for history in model.buyHistories %}
                                 <tr>
                                     <td>{{ history.id }}</td>
                                     <td>{{ history.amountPaid }}</td>
                                     <td>{{ history.paypalTransactionId }}</td>
                                     <td>{{ history.datetimePaid|date('d-m-Y H:i:s') }}</td>
-                                    <td>{{ history.modelId }}</td>
+                                    <td>{{ history.modelId.id }}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>
@@ -143,53 +148,85 @@
             data-sdk-integration-source="developer-studio"
     ></script>
     <script>
-        window.paypal.Buttons({
-            style: {
-                shape: "rect",
-                layout: "vertical",
-                color: "gold",
-                label: "paypal",
-            },
-            createOrder: async function(data, actions) {
-                // Отправляем запрос на создание заказа, передавая model_id выбранной модели
-                const response = await fetch("{{ path('create_order') }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        model_id: {{ model.id }}
-                    })
-                });
-                const orderData = await response.json();
-                if (orderData.id) {
-                    return orderData.id;
-                }
-                throw new Error("Ошибка при создании заказа");
-            },
-            onApprove: async function(data, actions) {
-                const orderID = data.orderID;
-                // Формируем URL с плейсхолдером, который заменяем на orderID
-                const captureUrl = "{{ path('capture_order', { orderId: 'ORDER_ID_PLACEHOLDER' }) }}"
-                    .replace('ORDER_ID_PLACEHOLDER', orderID);
-
-                const response = await fetch(captureUrl, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        model_id: {{ model.id }}
-                    })
-                });
-                const orderData = await response.json();
-                if (orderData.error) {
-                    resultMessage(`Ошибка транзакции: ${orderData.error}`);
+        document.addEventListener("turbo:load", function() {
+            // Если контейнер для кнопки присутствует на странице, инициализируем PayPal
+            if (document.getElementById("paypal-button-container")) {
+                if (window.paypal) {
+                    initPaypalButton();
                 } else {
-                    resultMessage(`Транзакция завершена. ID: ${orderData.purchase_units[0].payments.captures[0].id}`);
+                    loadPaypalSdk(initPaypalButton);
                 }
             }
-        }).render('#paypal-button-container');
+        });
+
+        // Если вы не используете Turbo, можно использовать DOMContentLoaded:
+        document.addEventListener("DOMContentLoaded", function() {
+            if (document.getElementById("paypal-button-container")) {
+                if (window.paypal) {
+                    initPaypalButton();
+                } else {
+                    loadPaypalSdk(initPaypalButton);
+                }
+            }
+        });
+
+        function loadPaypalSdk(callback) {
+            // Создаем новый тег script для загрузки SDK
+            var script = document.createElement("script");
+            script.src = "https://www.paypal.com/sdk/js?client-id=AY5Rdu8kbJHWHk8efPzpgbMjb8hUiGO0iE3CeokVGoXSaqfLJt4e2b4zXzzOezMjvny0N9IX2bOOQGcL&buyer-country=US&currency=USD&components=buttons&disable-funding=venmo,paylater,card";
+            script.onload = callback;
+            document.head.appendChild(script);
+        }
+
+        function initPaypalButton() {
+            // Если кнопка уже была инициализирована, можно очистить контейнер
+            document.getElementById("paypal-button-container").innerHTML = "";
+
+            window.paypal.Buttons({
+                style: {
+                    shape: "rect",
+                    layout: "vertical",
+                    color: "gold",
+                    label: "paypal",
+                },
+                createOrder: async function() {
+                    const response = await fetch("{{ path('create_order') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            model_id: {{ model.id }}
+                        })
+                    });
+                    const orderData = await response.json();
+                    if (orderData.id) {
+                        return orderData.id;
+                    }
+                    throw new Error("Ошибка при создании заказа");
+                },
+                onApprove: async function(data) {
+                    const orderID = data.orderID;
+                    const captureUrl = "{{ path('capture_order', { orderId: 'ORDER_ID_PLACEHOLDER' }) }}"
+                        .replace('ORDER_ID_PLACEHOLDER', orderID);
+                    const response = await fetch(captureUrl, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            model_id: {{ model.id }}
+                        })
+                    });
+                    const orderData = await response.json();
+                    if (orderData.error) {
+                        resultMessage(`Ошибка транзакции: ${orderData.error}`);
+                    } else {
+                        resultMessage(`Транзакция завершена. ID: ${orderData.purchase_units[0].payments.captures[0].id}`);
+                    }
+                }
+            }).render("#paypal-button-container");
+        }
 
         function resultMessage(message) {
             const container = document.querySelector("#result-message");
