@@ -8,6 +8,7 @@ document.addEventListener('turbo:load', function () {
         const model = button.getAttribute('data-model');
         const price = button.getAttribute('data-price');
         const description = button.getAttribute('data-description');
+        console.log('model id ', modelId, ' brand ', brand, ' model ', model, ' price ', price);
 
         // Fill the form fields
         document.getElementById('modelId').value = modelId;
