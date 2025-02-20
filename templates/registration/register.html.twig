@@ -3,17 +3,37 @@
 {% block title %}Register{% endblock %}
 
 {% block body %}
-    <h1>Register</h1>
+    <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="card p-4 shadow-lg" style="max-width: 400px; width: 100%;">
+            <h2 class="text-center mb-4">Регистрация</h2>
 
-    {{ form_errors(registrationForm) }}
+            {{ form_start(registrationForm, { 'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'} }) }}
 
-    {{ form_start(registrationForm) }}
-        {{ form_row(registrationForm.username) }}
-        {{ form_row(registrationForm.plainPassword, {
-            label: 'Password'
-        }) }}
-        {{ form_row(registrationForm.agreeTerms) }}
+            <div class="mb-3">
+                {{ form_label(registrationForm.username, 'Имя пользователя:', { 'label_attr': {'class': 'form-label'} }) }}
+                {{ form_widget(registrationForm.username, { 'attr': {'class': 'form-control', 'required': 'required'} }) }}
+                {{ form_errors(registrationForm.username) }}
+            </div>
 
-        <button type="submit" class="btn">Register</button>
-    {{ form_end(registrationForm) }}
+            <div class="mb-3">
+                {{ form_label(registrationForm.plainPassword, 'Пароль:', { 'label_attr': {'class': 'form-label'} }) }}
+                {{ form_widget(registrationForm.plainPassword, { 'attr': {'class': 'form-control', 'required': 'required'} }) }}
+                {{ form_errors(registrationForm.plainPassword) }}
+            </div>
+
+            <div class="form-check mb-3">
+                {{ form_widget(registrationForm.agreeTerms, { 'attr': {'class': 'form-check-input'} }) }}
+                {{ form_label(registrationForm.agreeTerms, 'Я принимаю условия', { 'label_attr': {'class': 'form-check-label'} }) }}
+                {{ form_errors(registrationForm.agreeTerms) }}
+            </div>
+
+            <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
+            {{ form_end(registrationForm) }}
+
+            <div class="text-center mt-3">
+                <p class="mb-0">Уже есть аккаунт?</p>
+                <a href="{{ path('app_login') }}" class="btn btn-outline-primary w-100 mt-2">Войти</a>
+            </div>
+        </div>
+    </div>
 {% endblock %}

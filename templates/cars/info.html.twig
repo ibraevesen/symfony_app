@@ -11,7 +11,11 @@
             <div class="row justify-content-center">
                 <div class="col">
                     <div>
-                        <img src="{{ asset(model.photo) }}" class="card-img-top car-image" alt="Фото автомобиля">
+                        {% if model.photo %}
+                            <img src="{{ asset(model.photo) }}" class="card-img-top car-image" alt="Фото автомобиля">
+                        {% else %}
+                            <img src="{{ asset('uploads/default.jpg') }}" class="card-img-top car-image" alt="Фото автомобиля">
+                        {% endif %}
                     </div>
                     <div class="card-body">
                         <h5 class="card-title">{{ model.car.brand }}</h5>
@@ -72,7 +76,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="carModel" class="form-label">Model:</label>
-                            <input type="text" id="carModel" name="model" class="form-control">
+                            <input type="text" id="carModel" name="model" class="form-control" readonly>
                         </div>
                         <div class="mb-3">
                             <label for="carPrice" class="form-label">Price:</label>

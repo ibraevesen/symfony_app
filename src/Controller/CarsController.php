@@ -37,7 +37,7 @@ final class CarsController extends AbstractController
         $data = $request->request->all();
         $file = $request->files->get('photo');
 
-        if (empty($data['brand_id']) || empty($data['model']) || empty($data['description'])) {
+        if (empty($data['brand_id']) || empty($data['model']) || empty($data['price']) || empty($data['description'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'All fields are required'], 400);
         }
 
@@ -51,6 +51,7 @@ final class CarsController extends AbstractController
         $carModel = new CarModels();
         $carModel->setCar($car);
         $carModel->setModel($data['model']);
+        $carModel->setModelPrice($data['price']);
         $carModel->setDescription($data['description']);
 
         if ($file) {
@@ -95,7 +96,7 @@ final class CarsController extends AbstractController
         $data = $request->request->all();
         $file = $request->files->get('photo');
 
-        if (empty($data['id']) || empty($data['model']) || empty($data['description']) || empty($data['price'])) {
+        if (empty($data['id']) || empty($data['description']) || empty($data['price'])) {
             return new JsonResponse(['status' => 'error', 'message' => 'All fields are required'], 400);
         }
 
@@ -105,8 +106,6 @@ final class CarsController extends AbstractController
             return new JsonResponse(['status' => 'error', 'message' => 'Car not found'], 404);
         }
 
-        // Обновление модели и описания
-        $carModel->setModel($data['model']);
         $carModel->setModelPrice($data['price']);
         $carModel->setDescription($data['description']);
 
@@ -124,7 +123,6 @@ final class CarsController extends AbstractController
             'message' => 'Car updated successfully',
             'updatedData' => [
                 'id' => $carModel->getId(),
-                'model' => $carModel->getModel(),
                 'price' => $carModel->getModelPrice(),
                 'description' => $carModel->getDescription(),
                 'photo' => $carModel->getPhoto(),

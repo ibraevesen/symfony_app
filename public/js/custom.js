@@ -22,14 +22,12 @@ document.addEventListener('turbo:load', function () {
         e.preventDefault();
 
         const modelId = document.getElementById('modelId').value;
-        const model = document.getElementById('carModel').value;
         const price = document.getElementById('carPrice').value;
         const description = document.getElementById('carDescription').value;
         const photo = document.getElementById('carPhoto').files[0];
 
         const formData = new FormData();
         formData.append('id', modelId);
-        formData.append('model', model);
         formData.append('price', price);
         formData.append('description', description);
         if (photo) {
@@ -45,7 +43,6 @@ document.addEventListener('turbo:load', function () {
                 if (data.status === 'success') {
                     // Найти карточку и обновить данные
                     const card = document.querySelector(`button[data-id="${modelId}"]`).closest('.card-body');
-                    card.querySelector('.card-subtitle').textContent = 'Модель: ' + model;  // Обновить описание модели
                     card.querySelector('.car-price').textContent = 'Цена: ' + price + ' USD';
                     card.querySelector('.card-text').textContent = 'Описание: ' + description;  // Обновить описание
 
@@ -59,7 +56,6 @@ document.addEventListener('turbo:load', function () {
 
                     // Обновить data-атрибуты кнопки "Edit"
                     const editButton = document.querySelector(`button[data-id="${modelId}"][data-bs-toggle="modal"]`);
-                    editButton.setAttribute('data-model', data.updatedData.model);
                     editButton.setAttribute('data-description', data.updatedData.description);
                     editButton.setAttribute('data-price', data.updatedData.price);
 

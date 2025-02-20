@@ -94,6 +94,10 @@
                             <input type="text" id="newModel" name="model" class="form-control" required>
                         </div>
                         <div class="mb-3">
+                            <label for="newModelPrice" class="form-label">Price:</label>
+                            <input type="number" id="newModelPrice" name="price" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
                             <label for="newModelDescription" class="form-label">Description:</label>
                             <input type="text" id="newModelDescription" name="description" class="form-control" required>
                         </div>
@@ -144,12 +148,14 @@
 
             const brandId = document.getElementById('newModelBrand').value;
             const model = document.getElementById('newModel').value;
+            const price = document.getElementById('newModelPrice').value;
             const description = document.getElementById('newModelDescription').value;
             const photo = document.getElementById('newModelPhoto').files[0];
 
             const formData = new FormData();
             formData.append('brand_id', brandId);
             formData.append('model', model);
+            formData.append('price', price);
             formData.append('description', description);
             if (photo) {
                 formData.append('photo', photo);

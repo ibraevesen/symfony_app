@@ -1,0 +1,8 @@
+body {
+    background-color: white;
+}
+
+.car-image {
+    width: 600px;
+    height: auto; /* Чтобы сохранить пропорции */
+}
