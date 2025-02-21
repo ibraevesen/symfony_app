@@ -42,25 +42,22 @@ document.addEventListener('turbo:load', function () {
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // Найти карточку и обновить данные
+
                     const card = document.querySelector(`button[data-id="${modelId}"]`).closest('.card-body');
                     card.querySelector('.car-price').textContent = 'Цена: ' + price + ' USD';
-                    card.querySelector('.card-text').textContent = 'Описание: ' + description;  // Обновить описание
+                    card.querySelector('.card-text').textContent = 'Описание: ' + description;
 
-                    // Обновить фото, если оно было изменено
                     if (photo && data.updatedData.photo) {
                         const imgElement = card.querySelector('.car-image');
                         if (imgElement) {
-                            imgElement.src = data.updatedData.photo;  // Обновить фото
+                            imgElement.src = data.updatedData.photo;
                         }
                     }
 
-                    // Обновить data-атрибуты кнопки "Edit"
                     const editButton = document.querySelector(`button[data-id="${modelId}"][data-bs-toggle="modal"]`);
                     editButton.setAttribute('data-description', data.updatedData.description);
                     editButton.setAttribute('data-price', data.updatedData.price);
 
-                    // Закрыть модальное окно
                     bootstrap.Modal.getInstance(editCarModal).hide();
                 } else {
                     alert('Error updating car: ' + data.message);

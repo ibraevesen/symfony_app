@@ -41,13 +41,11 @@ final class CarsController extends AbstractController
             return new JsonResponse(['status' => 'error', 'message' => 'All fields are required'], 400);
         }
 
-        // Получаем бренд из базы
         $car = $carsRepository->find($data['brand_id']);
         if (!$car) {
             return new JsonResponse(['status' => 'error', 'message' => 'Brand not found'], 404);
         }
 
-        // Создаем новую модель
         $carModel = new CarModels();
         $carModel->setCar($car);
         $carModel->setModel($data['model']);

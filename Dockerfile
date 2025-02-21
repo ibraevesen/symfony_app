@@ -14,7 +14,7 @@ RUN curl -sS https://get.symfony.com/cli/installer | bash && \
 # Устанавливаем зависимости Symfony
 WORKDIR /var/www/html
 COPY . .
-RUN composer install --no-interaction --optimize-autoloader
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --no-scripts --optimize-autoloader
 
 # Устанавливаем права доступа
 RUN chown -R www-data:www-data /var/www/html/var /var/www/html/public

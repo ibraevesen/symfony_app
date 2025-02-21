@@ -4,5 +4,5 @@ body {
 
 .car-image {
     width: 600px;
-    height: auto; /* Чтобы сохранить пропорции */
+    height: auto;
 }
